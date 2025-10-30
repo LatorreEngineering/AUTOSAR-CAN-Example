@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include "can_driver.h"
+
+// Forward declaration of SWC task
+void TemperatureMonitor_Task(void);
+
+int main(void) {
+    // Initialize CAN driver
+    if (Can_Init() != E_OK) {
+        printf("Error initializing CAN driver!\n");
+        return -1;
+    }
+
+    printf("Starting AUTOSAR CAN Example...\n");
+
+    // Main loop (for demo, we run once)
+    TemperatureMonitor_Task();
+
+    printf("AUTOSAR CAN Example finished.\n");
+    return 0;
+}
+
+// SWC task implementation
+void TemperatureMonitor_Task(void) {
+    CanDataType temp_data[1];
+    temp_data[0] = 25; // Simulated temperature sensor reading
+
+    // Send temperature over CAN
+    if (Can_Write(0x100, temp_data, 1) != E_OK) {
+        printf("Failed to send CAN message\n");
+        return;
+    }
+
+    // Receive the same message (loopback simulation)
+    CanDataType rx_data[1];
+    uint8_t length = 1;
+    if (Can_Read(0x100, rx_data, &length) != E_OK) {
+        printf("Failed to read CAN message\n");
+        return;
+    }
+
+    printf("Temperature received over CAN: %d°C\n", rx_data[0]);
+}
